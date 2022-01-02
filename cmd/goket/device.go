@@ -11,6 +11,7 @@ import (
 
 func handleDevice(logger *zap.Logger, device string, r runner.Runner, eventMap eventprocessor.EventMap, timeout float64) {
 	processor := eventprocessor.NewProcessor(logger, eventMap, timeout, r.Channel())
+	processor.Start()
 
 	for {
 		logger.Info("Opening device")
@@ -29,7 +30,7 @@ func handleDevice(logger *zap.Logger, device string, r runner.Runner, eventMap e
 			}
 
 			if key.Down {
-				processor.Process(key.KeyName)
+				processor.Process(key.KeyName, key.Time)
 			}
 		}
 

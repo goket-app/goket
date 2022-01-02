@@ -19,7 +19,12 @@ type processor struct {
 	currentTimeout  float64
 
 	closeChannel chan struct{}
-	eventChannel chan string
+	eventChannel chan *processorEvent
+}
+
+type processorEvent struct {
+	name string
+	when time.Time
 }
 
 func NewProcessor(logger *zap.Logger, eventMap EventMap, timeout float64, processEventChannel chan *Event) EventProcessor {
@@ -30,33 +35,42 @@ func NewProcessor(logger *zap.Logger, eventMap EventMap, timeout float64, proces
 		rootEventMap: eventMap,
 		rootTimeout:  timeout,
 
-		closeChannel: make(chan struct{}, 1),
-		eventChannel: make(chan string, 16),
+		eventChannel: make(chan *processorEvent, 16),
 	}
 
 	p.resetCurrentEvent()
 
-	go p.processLoop()
-
 	return p
+}
+
+func (p *processor) Start() {
+	p.Close()
+	p.closeChannel = make(chan struct{}, 1)
+	go p.processLoop()
+}
+
+func (p *processor) Process(name string, when time.Time) {
+	p.eventChannel <- &processorEvent{name: name, when: when}
+}
+
+func (p *processor) Close() {
+	if p.closeChannel != nil {
+		p.closeChannel <- struct{}{}
+	}
 }
 
 func (p *processor) currentTimeoutDuration() time.Duration {
 	return time.Duration(p.currentTimeout * float64(time.Second))
 }
 
-func (p *processor) Process(name string) {
-	p.eventChannel <- name
-}
-
-func (p *processor) Close() {
-	p.closeChannel <- struct{}{}
-}
-
-func (p *processor) checkIfTimedOut() {
-	if p.currentEvent != nil && time.Now().After(p.lastTime.Add(p.currentTimeoutDuration())) {
+func (p *processor) checkIfTimedOut(when time.Time) {
+	if p.previousEventTimedOut(when) {
 		p.resetCurrentEvent()
 	}
+}
+
+func (p *processor) previousEventTimedOut(when time.Time) bool {
+	return p.currentEvent != nil && when.After(p.lastTime.Add(p.currentTimeoutDuration()))
 }
 
 func (p *processor) resetCurrentEvent() {
@@ -81,17 +95,21 @@ func (p *processor) processLoop() {
 			close(p.closeChannel)
 			close(p.eventChannel)
 			return
-		case name := <-p.eventChannel:
-			p.checkIfTimedOut()
-			p.handleEvent(name)
+		case event := <-p.eventChannel:
+			p.processEvent(event)
 		case <-time.After(timeout):
 			p.performCurrentEvent()
 		}
 	}
 }
 
-func (p *processor) handleEvent(name string) {
-	p.lastTime = time.Now()
+func (p *processor) processEvent(event *processorEvent) {
+	p.checkIfTimedOut(event.when)
+	p.handleEvent(event.name, event.when)
+}
+
+func (p *processor) handleEvent(name string, now time.Time) {
+	p.lastTime = now
 
 	newEvent, ok := p.currentEventMap[name]
 

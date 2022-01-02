@@ -1,6 +1,9 @@
 package eventprocessor
 
+import "time"
+
 type EventProcessor interface {
-	Process(name string)
+	Start()
 	Close()
+	Process(name string, when time.Time)
 }
