@@ -24,5 +24,7 @@ func getConfig(configPath string) (*Config, error) {
 		return nil, err
 	}
 
+	config.Keys.Initialize()
+
 	return &config, nil
 }

@@ -14,9 +14,7 @@ type processor struct {
 	rootEventMap EventMap
 	rootTimeout  float64
 
-	currentEvent    *Event
-	currentEventMap EventMap
-	currentTimeout  float64
+	currentEvent *Event
 
 	closeChannel chan struct{}
 	eventChannel chan *processorEvent
@@ -38,8 +36,6 @@ func NewProcessor(logger *zap.Logger, eventMap EventMap, timeout float64, proces
 		eventChannel: make(chan *processorEvent, 16),
 	}
 
-	p.resetCurrentEvent()
-
 	return p
 }
 
@@ -59,13 +55,30 @@ func (p *processor) Close() {
 	}
 }
 
+func (p *processor) currentEventMap() EventMap {
+	if p.currentEvent != nil {
+		return p.currentEvent.Children
+	}
+	return p.rootEventMap
+}
+
 func (p *processor) currentTimeoutDuration() time.Duration {
-	return time.Duration(p.currentTimeout * float64(time.Second))
+	seconds := p.rootTimeout
+	currentEvent := p.currentEvent
+	for currentEvent != nil {
+		if currentEvent.Timeout > 0 {
+			seconds = currentEvent.Timeout
+			break
+		}
+		currentEvent = currentEvent.parent
+	}
+	return time.Duration(seconds * float64(time.Second))
 }
 
 func (p *processor) checkIfTimedOut(when time.Time) {
+	// only
 	if p.previousEventTimedOut(when) {
-		p.resetCurrentEvent()
+		p.findParentCurrentEvent(when)
 	}
 }
 
@@ -73,12 +86,16 @@ func (p *processor) previousEventTimedOut(when time.Time) bool {
 	return p.currentEvent != nil && when.After(p.lastTime.Add(p.currentTimeoutDuration()))
 }
 
-func (p *processor) resetCurrentEvent() {
-	p.logger.Debug("resetting current event")
-	p.currentEvent = nil
-	p.currentEventMap = p.rootEventMap
-	p.currentTimeout = p.rootTimeout
+// Find parent event that has Stay set to true and has not timed out ; returns nil if no parent found
+func (p *processor) findParentCurrentEvent(when time.Time) {
+	p.currentEvent = p.currentEvent.parent
 
+	for p.currentEvent != nil {
+		if p.currentEvent.Stay && !p.previousEventTimedOut(when) {
+			break
+		}
+		p.currentEvent = p.currentEvent.parent
+	}
 }
 
 func (p *processor) processLoop() {
@@ -111,7 +128,7 @@ func (p *processor) processEvent(event *processorEvent) {
 func (p *processor) handleEvent(name string, now time.Time) {
 	p.lastTime = now
 
-	newEvent, ok := p.currentEventMap[name]
+	newEvent, ok := p.currentEventMap()[name]
 
 	// try keys from root map as well
 	if !ok {
@@ -123,11 +140,6 @@ func (p *processor) handleEvent(name string, now time.Time) {
 
 		if len(newEvent.Children) > 0 {
 			p.logger.Info("handling event with children", zap.String("name", name))
-
-			p.currentEventMap = newEvent.Children
-			if newEvent.Timeout > 0 {
-				p.currentTimeout = float64(newEvent.Timeout)
-			}
 		} else {
 			p.logger.Info("handling event without children", zap.String("name", name))
 			p.performCurrentEvent()
@@ -146,6 +158,6 @@ func (p *processor) performCurrentEvent() {
 			p.logger.Info("ignoring empty event", zap.String("action", p.currentEvent.Action), zap.String("type", p.currentEvent.Type))
 		}
 
-		p.resetCurrentEvent()
+		p.findParentCurrentEvent(p.lastTime)
 	}
 }

@@ -39,6 +39,23 @@ var (
 				},
 			},
 		},
+		"s": {
+			Timeout: 10 * timeout,
+			Stay:    true,
+			Children: map[string]*Event{
+				"t": {
+					Timeout: 5 * timeout,
+					Children: map[string]*Event{
+						"a": {
+							Action: "action://s-t-a",
+						},
+					},
+				},
+				"a": {
+					Action: "action://s-a",
+				},
+			},
+		},
 	}
 )
 
@@ -211,12 +228,50 @@ func Test_Events(t *testing.T) {
 				"action://a",
 			},
 		},
+
+		{
+			name: "ensure parent timeout is respected at first level",
+			inputs: []*testEvent{
+				{name: "s"},
+				{name: "t", after: timeoutDuration / 2},
+				{name: "a", after: timeoutDuration * 6},
+			},
+			expected: []string{
+				"action://s-a",
+			},
+		},
+
+		{
+			name: "ensure parent timeout is respected at second level",
+			inputs: []*testEvent{
+				{name: "s"},
+				{name: "t", after: timeoutDuration / 2},
+				{name: "a", after: timeoutDuration * 3},
+			},
+			expected: []string{
+				"action://s-t-a",
+			},
+		},
+
+		{
+			name: "ensure parent timeout is respected outside of timeout",
+			inputs: []*testEvent{
+				{name: "s"},
+				{name: "t", after: timeoutDuration / 2},
+				{name: "a", after: timeoutDuration * 11},
+			},
+			expected: []string{
+				"action://a",
+			},
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			eventMap := test.eventMap
 			if eventMap == nil {
 				eventMap = defaultEventMap
 			}
+			eventMap.Initialize()
+
 			p, o := setupProcessor(t, eventMap)
 			when := startTime
 			for _, input := range test.inputs {
