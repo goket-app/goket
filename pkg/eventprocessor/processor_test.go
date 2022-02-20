@@ -75,7 +75,7 @@ func setupProcessor(t *testing.T, eventMap EventMap) (*processor, chan *Event) {
 	return processor, out
 }
 
-func Test_Events(t *testing.T) {
+func TestEvents(t *testing.T) {
 	for _, test := range []struct {
 		name     string
 		eventMap EventMap
