@@ -24,7 +24,7 @@ jobs:
           chainloop version
 
       - name: Initialize Attestation
-        run: chainloop attestation init --contract-revision 2
+        run: chainloop attestation init
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -47,6 +47,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
+
+      - name: Add Attestation Artifacts (binaries)
+        run: |
+          echo -n '${{ steps.release.outputs.artifacts }}' | jq -r '.[] | select(.type=="Binary" and .goos=="linux") | { "name": "\(.extra.ID)-\(.goos)-\(.goarch)", "path":"\(.path)"} | @base64' | while read i; do
+              BINARY_NAME=$(echo "${i}" | base64 --decode | jq -r ${1} .name)
+              BINARY_PATH=$(echo "${i}" | base64 --decode | jq -r ${1} .path)
+              chainloop attestation add --name ${BINARY_NAME} --value ${BINARY_PATH} 
+            done
 
       - name: Finish and Record Attestation
         if: ${{ success() }}
