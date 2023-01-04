@@ -1,0 +1,23 @@
+env:
+  - CGO_ENABLED=0
+
+builds:
+  - main: ./cmd/goket
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm
+      - arm64
+
+signs:
+  # COSIGN_PASSWORD is also required to be present
+  - cmd: cosign
+    args:
+      [
+        "sign-blob",
+        "--key=env://COSIGN_PRIVATE_KEY",
+        "--output-signature=${signature}",
+        "${artifact}",
+      ]
+    artifacts: all
