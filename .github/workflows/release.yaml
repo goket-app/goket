@@ -48,6 +48,13 @@ jobs:
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
 
+      - uses: anchore/sbom-action@v0
+        with:
+          path: ./dist/
+          format: cyclonedx-json
+          artifact-name: sbom.cyclonedx.json
+          output-file: /tmp/sbom.cyclonedx.json
+
       - name: Add Attestation Artifacts (binaries)
         run: |
           echo -n '${{ steps.release.outputs.artifacts }}' | jq -r '.[] | select(.type=="Binary" and .goos=="linux") | { "name": "\(.extra.ID)-\(.goos)-\(.goarch)", "path":"\(.path)"} | @base64' | while read i; do
