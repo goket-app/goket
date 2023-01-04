@@ -24,7 +24,7 @@ jobs:
           chainloop version
 
       - name: Initialize Attestation
-        run: chainloop attestation init
+        run: chainloop attestation init --contract-revision 2
 
       - name: Checkout
         uses: actions/checkout@v3
