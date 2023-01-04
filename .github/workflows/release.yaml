@@ -63,6 +63,9 @@ jobs:
               chainloop attestation add --name ${BINARY_NAME} --value ${BINARY_PATH} 
             done
 
+      - name: Add Attestation Artifacts (SBOM)
+        run: chainloop attestation add --name sbom --value /tmp/sbom.cyclonedx.json
+
       - name: Finish and Record Attestation
         if: ${{ success() }}
         run: |
