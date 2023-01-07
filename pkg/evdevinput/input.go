@@ -3,8 +3,8 @@ package evdevinput
 import (
 	"time"
 
+	"github.com/goket-app/goket/pkg/input"
 	evdev "github.com/holoplot/go-evdev"
-	"github.com/wojciechka/goket/pkg/input"
 )
 
 type evdevKeyboardInput struct {

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wojciechka/goket/pkg/evdevinput"
-	"github.com/wojciechka/goket/pkg/runner"
+	"github.com/goket-app/goket/pkg/evdevinput"
+	"github.com/goket-app/goket/pkg/runner"
 	"go.uber.org/zap"
 )
 

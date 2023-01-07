@@ -3,7 +3,7 @@ package runner
 import (
 	"net/http"
 
-	"github.com/wojciechka/goket/pkg/eventprocessor"
+	"github.com/goket-app/goket/pkg/eventprocessor"
 	"go.uber.org/zap"
 )
 

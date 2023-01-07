@@ -3,9 +3,9 @@ package main
 import (
 	"strings"
 
-	"github.com/wojciechka/goket/pkg/evdevinput"
-	"github.com/wojciechka/goket/pkg/eventprocessor"
-	"github.com/wojciechka/goket/pkg/runner"
+	"github.com/goket-app/goket/pkg/evdevinput"
+	"github.com/goket-app/goket/pkg/eventprocessor"
+	"github.com/goket-app/goket/pkg/runner"
 	"go.uber.org/zap"
 )
 
