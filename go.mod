@@ -1,4 +1,4 @@
-module github.com/wojciechka/goket
+module github.com/goket-app/goket
 
 go 1.17
 

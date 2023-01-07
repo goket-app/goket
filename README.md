@@ -13,7 +13,7 @@ I am using it with multiple wireless numeric keyboards with USB receivers. I fin
 Goket can be installed from the repository - such as:
 
 ```bash
-go install github.com/wojciechka/goket/cmd/goket
+go install github.com/goket-app/goket/cmd/goket
 ```
 
 I'll also start providing pre-built binaries soon.

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/wojciechka/goket/pkg/eventprocessor"
+	"github.com/goket-app/goket/pkg/eventprocessor"
 )
 
 // Config is JSON configuration read by the client
