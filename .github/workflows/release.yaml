@@ -20,8 +20,6 @@ jobs:
       - name: Install Chainloop
         run: |
           curl -sfL https://chainloop.dev/install.sh | bash -s -- --version v${{ env.CL_VERSION }}
-          sudo install chainloop /usr/local/bin
-          chainloop version
 
       - name: Initialize Attestation
         run: chainloop attestation init
@@ -85,5 +83,5 @@ jobs:
         run: |
           chainloop attestation reset --trigger cancellation
     env:
-      CL_VERSION: 0.8.56
+      CL_VERSION: 0.8.70
       CHAINLOOP_ROBOT_ACCOUNT: ${{ secrets.CHAINLOOP_ROBOT_ACCOUNT_TOKEN }}
