@@ -40,3 +40,5 @@ bin/
 
 # Go releaser
 dist/
+
+/.claude
