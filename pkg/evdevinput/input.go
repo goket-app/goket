@@ -30,7 +30,7 @@ func (i *evdevKeyboardInput) Read() (input.KeyboardInputEvent, error) {
 		}
 
 		if e.Type == evdev.EV_KEY {
-			keyName, ok := evdev.KEYName[e.Code]
+			keyName, ok := evdev.KEYNames[e.Code]
 			if ok {
 				return input.KeyboardInputEvent{
 					Time:    time.Unix(int64(e.Time.Sec), int64(e.Time.Usec)*1000),
